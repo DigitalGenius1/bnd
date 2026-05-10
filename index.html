@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bnd.one — khaled aljarallah</title>
+
+<!-- Meta description for search & previews -->
+<meta name="description" content="Khaled Aljarallah — AI thinking partner. Working with AI to help people get answers they couldn't get alone. London · Kuwait · Portland.">
+
+<!-- Open Graph (LinkedIn, Facebook, WhatsApp, Slack, iMessage, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bnd.one">
+<meta property="og:title" content="bnd.one — Khaled Aljarallah">
+<meta property="og:description" content="thinking with machines · london · kuwait · portland">
+<meta property="og:image" content="https://bnd.one/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="bnd.one — Khaled Aljarallah">
+<meta name="twitter:description" content="thinking with machines · london · kuwait · portland">
+<meta name="twitter:image" content="https://bnd.one/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #050814;
+    --bg-mid: #0a0e1f;
+    --magenta: #ff2d8a;
+    --magenta-glow: #ff2d8a80;
+    --cyan: #00e5ff;
+    --cyan-glow: #00e5ff60;
+    --text: #e8eaf2;
+    --text-dim: #8892b0;
+    --grid: #1a1f3a;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--magenta);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease, width 0.2s, height 0.2s, background 0.2s;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: difference;
+  }
+
+  .cursor-dot {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    background: var(--magenta);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+  }
+
+  .cursor.hover {
+    width: 40px;
+    height: 40px;
+    background: var(--magenta-glow);
+  }
+
+  /* Background canvas */
+  #bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* Scanlines overlay */
+  .scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(255, 255, 255, 0.015) 2px,
+      rgba(255, 255, 255, 0.015) 3px
+    );
+    pointer-events: none;
+    z-index: 1000;
+    mix-blend-mode: overlay;
+  }
+
+  .grain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E");
+  }
+
+  /* Boot sequence */
+  #boot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-deep);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+
+  #boot.done {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .boot-text {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: var(--magenta);
+    text-align: left;
+    line-height: 1.6;
+    text-shadow: 0 0 8px var(--magenta-glow);
+    width: 320px;
+  }
+
+  .boot-line {
+    opacity: 0;
+    white-space: nowrap;
+  }
+
+  .cursor-blink::after {
+    content: '_';
+    animation: blink 0.8s infinite;
+    color: var(--magenta);
+  }
+
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  /* Heartbeat dot */
+  .heartbeat {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 10px;
+    height: 10px;
+    background: var(--magenta);
+    border-radius: 50%;
+    z-index: 998;
+    box-shadow: 0 0 12px var(--magenta);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+  }
+
+  /* Layout */
+  main {
+    position: relative;
+    z-index: 2;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  section {
+    min-height: 100vh;
+    padding: 120px 0;
+    position: relative;
+  }
+
+  /* Hero */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 80px 0;
+  }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(3rem, 10vw, 8rem);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    position: relative;
+    text-shadow:
+      2px 0 var(--magenta),
+      -2px 0 var(--cyan);
+    animation: glitchShift 6s infinite;
+  }
+
+  @keyframes glitchShift {
+    0%, 95%, 100% {
+      text-shadow: 2px 0 var(--magenta), -2px 0 var(--cyan);
+      transform: translate(0);
+    }
+    96% {
+      text-shadow: -3px 0 var(--magenta), 3px 0 var(--cyan);
+      transform: translate(-1px, 1px);
+    }
+    97% {
+      text-shadow: 4px 0 var(--magenta), -4px 0 var(--cyan);
+      transform: translate(2px, -1px);
+    }
+    98% {
+      text-shadow: -1px 0 var(--magenta), 1px 0 var(--cyan);
+      transform: translate(0);
+    }
+  }
+
+  .hero-tagline {
+    margin-top: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+    color: var(--text-dim);
+    max-width: 640px;
+    line-height: 1.7;
+  }
+
+  .hero-tagline .highlight {
+    color: var(--magenta);
+  }
+
+  .hero-meta {
+    margin-top: 48px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--magenta);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--magenta);
+    animation: pulse 1.6s infinite;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 16px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 16px 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--text-dim);
+    background: transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: var(--magenta);
+    transition: left 0.3s ease;
+    z-index: -1;
+  }
+
+  .btn:hover {
+    color: var(--bg-deep);
+    border-color: var(--magenta);
+    text-shadow: 0 0 0 transparent;
+  }
+
+  .btn:hover::before {
+    left: 0;
+  }
+
+  .btn-primary {
+    border-color: var(--magenta);
+    color: var(--magenta);
+  }
+
+  /* Section headers */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--magenta);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--magenta);
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 700;
+    margin-bottom: 48px;
+    letter-spacing: -0.03em;
+    text-shadow: 1px 0 var(--magenta), -1px 0 var(--cyan);
+  }
+
+  /* About */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  .portrait {
+    position: relative;
+    aspect-ratio: 3/4;
+    background: linear-gradient(135deg, var(--bg-mid), var(--bg-deep));
+    border: 1px solid var(--grid);
+    overflow: hidden;
+  }
+
+  .portrait::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(45deg, transparent 49%, var(--magenta) 49%, var(--magenta) 51%, transparent 51%),
+      linear-gradient(-45deg, transparent 49%, var(--cyan) 49%, var(--cyan) 51%, transparent 51%);
+    background-size: 20px 20px;
+    opacity: 0.05;
+    animation: shift 8s linear infinite;
+  }
+
+  @keyframes shift {
+    from { background-position: 0 0; }
+    to { background-position: 40px 40px; }
+  }
+
+  .portrait-inner {
+    position: absolute;
+    inset: 20px;
+    border: 1px solid var(--magenta);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .portrait-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+
+  .portrait-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--magenta);
+    text-shadow: 0 0 20px var(--magenta-glow);
+    line-height: 1;
+  }
+
+  .portrait-status {
+    margin-top: 24px;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    color: var(--cyan);
+  }
+
+  .portrait-corners::before,
+  .portrait-corners::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--magenta);
+  }
+
+  .portrait-corners::before {
+    top: 8px;
+    left: 8px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .portrait-corners::after {
+    bottom: 8px;
+    right: 8px;
+    border-left: none;
+    border-top: none;
+  }
+
+  .about-text p {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  .about-text .em {
+    color: var(--magenta);
+    font-weight: 500;
+  }
+
+  /* Work cards */
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .work-grid { grid-template-columns: 1fr; }
+  }
+
+  .work-card {
+    padding: 40px;
+    background: linear-gradient(135deg, var(--bg-mid), transparent);
+    border: 1px solid var(--grid);
+    position: relative;
+    transition: all 0.4s ease;
+    overflow: hidden;
+  }
+
+  .work-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: var(--magenta);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 12px var(--magenta);
+  }
+
+  .work-card:hover {
+    border-color: var(--magenta);
+    transform: translateY(-4px);
+    background: linear-gradient(135deg, rgba(255,45,138,0.05), transparent);
+  }
+
+  .work-card:hover::before {
+    width: 100%;
+  }
+
+  .work-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--magenta);
+    margin-bottom: 16px;
+    letter-spacing: 0.2em;
+  }
+
+  .work-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .work-desc {
+    color: var(--text-dim);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+
+  /* System specs */
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .specs-grid { grid-template-columns: 1fr; }
+  }
+
+  .spec-panel {
+    padding: 32px;
+    border: 1px solid var(--grid);
+    background: rgba(10, 14, 31, 0.5);
+    backdrop-filter: blur(8px);
+    position: relative;
+  }
+
+  .spec-panel::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 30px;
+    height: 30px;
+    border-top: 2px solid var(--magenta);
+    border-left: 2px solid var(--magenta);
+  }
+
+  .spec-panel::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 30px;
+    height: 30px;
+    border-bottom: 2px solid var(--cyan);
+    border-right: 2px solid var(--cyan);
+  }
+
+  .spec-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--magenta);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .spec-header::before { content: '['; color: var(--text-dim); }
+  .spec-header::after { content: ']'; color: var(--text-dim); }
+
+  .spec-content {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    line-height: 2;
+  }
+
+  .spec-content .arrow {
+    color: var(--cyan);
+    margin-right: 12px;
+  }
+
+  .lang-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .lang-name {
+    width: 80px;
+    color: var(--text);
+  }
+
+  .lang-fill {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-mid);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lang-fill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--magenta), var(--cyan));
+    box-shadow: 0 0 8px var(--magenta);
+    width: var(--fill, 100%);
+  }
+
+  .lang-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    width: 100px;
+    text-align: right;
+  }
+
+  /* Building section */
+  .building-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .build-card {
+    aspect-ratio: 1;
+    border: 1px solid var(--grid);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: none;
+    overflow: hidden;
+  }
+
+  .build-card.live {
+    border-color: var(--magenta);
+  }
+
+  .build-card.soon {
+    opacity: 0.6;
+  }
+
+  .build-card.soon::after {
+    content: 'soon';
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    animation: scrambleText 3s infinite;
+  }
+
+  @keyframes scrambleText {
+    0%, 90%, 100% { opacity: 1; }
+    93% { opacity: 0.3; transform: translateX(2px); }
+    96% { opacity: 0.7; transform: translateX(-2px); }
+  }
+
+  .build-card:hover {
+    border-color: var(--magenta);
+    background: rgba(255, 45, 138, 0.04);
+  }
+
+  .build-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--magenta);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+  }
+
+  .build-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  /* Thinking marquee */
+  .thinking {
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 24px 0;
+    border-top: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    background: rgba(10, 14, 31, 0.3);
+  }
+
+  .thinking-track {
+    display: inline-block;
+    animation: scroll 50s linear infinite;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--text-dim);
+  }
+
+  .thinking-track span {
+    margin: 0 60px;
+  }
+
+  .thinking-track .accent {
+    color: var(--magenta);
+  }
+
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* Connect grid */
+  .connect-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .connect-card {
+    padding: 24px;
+    border: 1px solid var(--grid);
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .connect-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 0;
+    background: var(--magenta);
+    transition: height 0.3s ease;
+  }
+
+  .connect-card:hover {
+    border-color: var(--magenta);
+    background: rgba(255, 45, 138, 0.04);
+    transform: translateX(4px);
+  }
+
+  .connect-card:hover::before {
+    height: 100%;
+  }
+
+  .connect-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--magenta);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+  }
+
+  .connect-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  .cta-block {
+    text-align: center;
+    padding: 60px 24px;
+    border: 1px solid var(--magenta);
+    background: rgba(255, 45, 138, 0.03);
+    margin-top: 48px;
+  }
+
+  .cta-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 32px;
+    color: var(--text);
+  }
+
+  /* Footer */
+  footer {
+    padding: 60px 32px;
+    border-top: 1px solid var(--grid);
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    line-height: 2;
+  }
+
+  /* Arcade game */
+  .arcade-frame {
+    max-width: 720px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #1a1f3a, #0a0e1f);
+    padding: 16px;
+    border: 2px solid var(--magenta);
+    box-shadow: 0 0 40px var(--magenta-glow), inset 0 0 20px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  .arcade-frame::before,
+  .arcade-frame::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--cyan);
+  }
+
+  .arcade-frame::before { top: 8px; left: 8px; }
+  .arcade-frame::after { top: 8px; right: 8px; }
+
+  .arcade-screen {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #050814;
+    border: 1px solid var(--grid);
+    overflow: hidden;
+  }
+
+  .arcade-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(255, 45, 138, 0.04) 2px,
+      rgba(255, 45, 138, 0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .arcade-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  #arcade-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  .arcade-overlay {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .arcade-code {
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    color: var(--magenta);
+    text-shadow: 0 0 6px var(--magenta);
+    line-height: 1.3;
+    white-space: pre;
+  }
+
+  .arcade-base {
+    margin-top: 12px;
+    text-align: center;
+    padding: 8px;
+    background: var(--bg-deep);
+    border: 1px solid var(--grid);
+  }
+
+  .arcade-label {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    color: var(--cyan);
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 4px var(--cyan);
+  }
+
+  .arcade-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+    background: var(--bg-deep);
+    border: 2px solid var(--magenta);
+    color: var(--magenta);
+    font-family: 'VT323', monospace;
+    font-size: 1.4rem;
+    padding: 16px 36px;
+    cursor: none;
+    letter-spacing: 0.2em;
+    box-shadow: 0 0 20px var(--magenta-glow);
+    text-shadow: 0 0 6px var(--magenta);
+    transition: all 0.2s ease;
+    animation: btnPulse 1.5s ease-in-out infinite;
+  }
+
+  .arcade-play-btn:hover {
+    background: var(--magenta);
+    color: var(--bg-deep);
+    text-shadow: none;
+    box-shadow: 0 0 30px var(--magenta);
+  }
+
+  .arcade-play-btn.hidden {
+    display: none;
+  }
+
+  @keyframes btnPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--magenta-glow); }
+    50% { box-shadow: 0 0 35px var(--magenta); }
+  }
+
+  .arcade-stats {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 5;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    color: var(--cyan);
+    text-shadow: 0 0 4px var(--cyan);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+    pointer-events: none;
+  }
+
+  .arcade-stats span span {
+    color: var(--magenta);
+    text-shadow: 0 0 4px var(--magenta);
+  }
+
+  footer .accent {
+    color: var(--magenta);
+  }
+
+  /* Reveal animation */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Selection */
+  ::selection {
+    background: var(--magenta);
+    color: var(--bg-deep);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--magenta); }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor"></div>
+<div class="cursor-dot"></div>
+
+<!-- Heartbeat -->
+<div class="heartbeat"></div>
+
+<!-- Background canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Effects layers -->
+<div class="scanlines"></div>
+<div class="grain"></div>
+
+<!-- Boot sequence -->
+<div id="boot">
+  <div class="boot-text">
+    <div class="boot-line">&gt; initializing system_</div>
+    <div class="boot-line">&gt; loading consciousness_</div>
+    <div class="boot-line">&gt; identity: khaled_</div>
+    <div class="boot-line">&gt; status: online_</div>
+    <div class="boot-line cursor-blink">&gt; welcome</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="live-indicator">
+      <span class="live-dot"></span>
+      <span>signal · active · 2026</span>
+    </div>
+    <h1>KHALED<br>ALJARALLAH</h1>
+    <p class="hero-tagline">
+      I work with AI to help people get answers <span class="highlight">they couldn't get alone.</span>
+      Thinking with machines, from London to Kuwait to wherever the signal reaches.
+    </p>
+    <div class="hero-buttons">
+      <a href="#work" class="btn btn-primary">enter</a>
+      <a href="#connect" class="btn">contact</a>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="reveal">
+    <div class="section-label">01 / who</div>
+    <h2 class="section-title">Who I am</h2>
+    <div class="about-grid">
+      <div class="portrait">
+        <div class="portrait-corners"></div>
+        <div class="portrait-inner">
+          <div class="portrait-id">subject_id // 0x4B41</div>
+          <div class="portrait-name">KHALED</div>
+          <div class="portrait-status">// 24 // online</div>
+        </div>
+      </div>
+      <div class="about-text">
+        <p>I'm 24. Based across <span class="em">London, Kuwait, and Portland.</span></p>
+        <p>I've spent the last few years using AI not as a tool but as a thinking partner — pushing past surface answers, tracing problems down to where they actually live, and pulling back something useful. It turns out this is a skill, and people pay for it.</p>
+        <p>I'm finishing a Master's at <span class="em">SOAS London</span>. My dissertation is on how AI changes the way founders make decisions in early-stage ventures. I work in English and Arabic, with French in the mix.</p>
+        <p><span class="em">I think with AI, not just at it.</span> That's the difference.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work" class="reveal">
+    <div class="section-label">02 / work</div>
+    <h2 class="section-title">What I do</h2>
+    <div class="work-grid">
+      <div class="work-card">
+        <div class="work-num">01</div>
+        <h3 class="work-title">Prompt Design</h3>
+        <p class="work-desc">Crafting the inputs that make AI produce reliable, high-quality results. Whether it's a customer agent, a content pipeline, or a decision tool — I figure out how to get the model to actually do what you need.</p>
+      </div>
+      <div class="work-card">
+        <div class="work-num">02</div>
+        <h3 class="work-title">Conversation Design</h3>
+        <p class="work-desc">Designing how AI agents talk to people — structure, ambiguity, where the human stays in the loop. The difference between a product that works and one that wastes everyone's time.</p>
+      </div>
+      <div class="work-card">
+        <div class="work-num">03</div>
+        <h3 class="work-title">Output Evaluation</h3>
+        <p class="work-desc">Pressure-testing AI outputs for accuracy, tone, edge cases, failure modes. Finding where systems break before users do.</p>
+      </div>
+      <div class="work-card">
+        <div class="work-num">04</div>
+        <h3 class="work-title">Strategic Thinking</h3>
+        <p class="work-desc">Less defined, more useful. Working through hard problems alongside AI when you need depth, not just an answer. Research, analysis, decision frameworks, anything that benefits from layered thinking.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYSTEM SPECS -->
+  <section id="specs" class="reveal">
+    <div class="section-label">03 / specs</div>
+    <h2 class="section-title">System</h2>
+    <div class="specs-grid">
+
+      <div class="spec-panel">
+        <div class="spec-header">education</div>
+        <div class="spec-content">
+          <div><span class="arrow">›</span>MSc International Business</div>
+          <div style="color: var(--text-dim); font-size: 0.85rem; margin-left: 24px;">SOAS University of London · 2025–2026</div>
+          <div style="margin-top: 12px;"><span class="arrow">›</span>BA Marketing</div>
+          <div style="color: var(--text-dim); font-size: 0.85rem; margin-left: 24px;">University of Portland · 2020–2024</div>
+        </div>
+      </div>
+
+      <div class="spec-panel">
+        <div class="spec-header">languages</div>
+        <div class="spec-content">
+          <div class="lang-bar">
+            <div class="lang-name">English</div>
+            <div class="lang-fill" style="--fill: 100%"></div>
+            <div class="lang-label">fluent</div>
+          </div>
+          <div class="lang-bar">
+            <div class="lang-name">Arabic</div>
+            <div class="lang-fill" style="--fill: 100%"></div>
+            <div class="lang-label">fluent</div>
+          </div>
+          <div class="lang-bar">
+            <div class="lang-name">French</div>
+            <div class="lang-fill" style="--fill: 50%"></div>
+            <div class="lang-label">conversational</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-panel">
+        <div class="spec-header">locations</div>
+        <div class="spec-content">
+          <div><span class="arrow">›</span>London</div>
+          <div><span class="arrow">›</span>Kuwait City</div>
+          <div><span class="arrow">›</span>Portland</div>
+          <div style="color: var(--text-dim); margin-top: 12px; font-size: 0.85rem;">remote-ready globally</div>
+        </div>
+      </div>
+
+      <div class="spec-panel">
+        <div class="spec-header">status</div>
+        <div class="spec-content">
+          <div><span class="arrow">›</span>available for contracts</div>
+          <div><span class="arrow">›</span>available for collaborations</div>
+          <div><span class="arrow">›</span>open to interesting problems</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BUILDING -->
+  <section id="building" class="reveal">
+    <div class="section-label">04 / building</div>
+    <h2 class="section-title">Currently</h2>
+    <div class="building-grid">
+      <a href="https://github.com/DigitalGenius1" target="_blank" class="build-card live" style="text-decoration: none; color: inherit;">
+        <div class="build-tag">live</div>
+        <div class="build-title">prompt libraries</div>
+      </a>
+      <div class="build-card soon">
+        <div class="build-tag">case studies</div>
+        <div class="build-title">real-world AI implementations</div>
+      </div>
+      <div class="build-card soon">
+        <div class="build-tag">dissertation</div>
+        <div class="build-title">AI-driven decision engines</div>
+      </div>
+      <div class="build-card soon">
+        <div class="build-tag">essays</div>
+        <div class="build-title">thinking with machines</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THINKING -->
+  <div class="thinking">
+    <div class="thinking-track">
+      <span>the line between my cognition and the system's output is where the work happens</span>
+      <span class="accent">·</span>
+      <span>ai didn't replace thinking · it externalized it</span>
+      <span class="accent">·</span>
+      <span>free is a frequency · not a state</span>
+      <span class="accent">·</span>
+      <span>london · kuwait · portland · everywhere the signal reaches</span>
+      <span class="accent">·</span>
+      <span>the line between my cognition and the system's output is where the work happens</span>
+      <span class="accent">·</span>
+      <span>ai didn't replace thinking · it externalized it</span>
+      <span class="accent">·</span>
+      <span>free is a frequency · not a state</span>
+      <span class="accent">·</span>
+      <span>london · kuwait · portland · everywhere the signal reaches</span>
+      <span class="accent">·</span>
+    </div>
+  </div>
+
+  <!-- ARCADE BRIDGE -->
+  <section id="arcade" class="reveal" style="min-height: auto; padding: 80px 0;">
+    <div class="section-label">runtime / bnd.exe</div>
+    <div class="arcade-frame">
+      <div class="arcade-screen">
+        <canvas id="arcade-canvas"></canvas>
+        <div class="arcade-overlay">
+          <div class="arcade-code" id="arcade-code"></div>
+        </div>
+        <div class="arcade-stats" id="arcade-stats">
+          <span>WINS <span id="wins-count">0</span></span>
+          <span>FAILS <span id="fails-count">0</span></span>
+        </div>
+        <button class="arcade-play-btn" id="arcade-play-btn">▶ PRESS START</button>
+      </div>
+      <div class="arcade-base">
+        <div class="arcade-label">&lt;bnd&gt; · player_01 · 1cr</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONNECT -->
+  <section id="connect" class="reveal">
+    <div class="section-label">05 / transmit</div>
+    <h2 class="section-title">Connect</h2>
+    <div class="connect-grid">
+      <a href="mailto:bnd@bnd.one" class="connect-card">
+        <div class="connect-label">email</div>
+        <div class="connect-value">bnd@bnd.one</div>
+      </a>
+      <a href="https://github.com/DigitalGenius1" target="_blank" class="connect-card">
+        <div class="connect-label">github</div>
+        <div class="connect-value">@DigitalGenius1</div>
+      </a>
+      <a href="#" class="connect-card">
+        <div class="connect-label">linkedin</div>
+        <div class="connect-value">khaled aljarallah</div>
+      </a>
+      <a href="https://instagram.com/khaledaljarallah_" target="_blank" class="connect-card">
+        <div class="connect-label">instagram</div>
+        <div class="connect-value">@khaledaljarallah_</div>
+      </a>
+      <a href="https://twitter.com/bnd1t" target="_blank" class="connect-card">
+        <div class="connect-label">twitter / x</div>
+        <div class="connect-value">@bnd1t</div>
+      </a>
+      <a href="https://t.me/bxxnxxd" target="_blank" class="connect-card">
+        <div class="connect-label">telegram</div>
+        <div class="connect-value">@bxxnxxd</div>
+      </a>
+    </div>
+
+    <div class="cta-block">
+      <div class="cta-text">Working on something cool?<br>I'd love to hear about it.<br>Send a transmission.</div>
+      <a href="mailto:bnd@bnd.one" class="btn btn-primary" style="text-transform: lowercase;">bnd@bnd.one</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  khaled aljarallah <span class="accent">·</span> 2026<br>
+  bnd.one
+</footer>
+
+<script>
+// ============ CURSOR ============
+const cursor = document.querySelector('.cursor');
+const cursorDot = document.querySelector('.cursor-dot');
+
+document.addEventListener('mousemove', (e) => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  cursorDot.style.left = e.clientX + 'px';
+  cursorDot.style.top = e.clientY + 'px';
+});
+
+document.querySelectorAll('a, .work-card, .build-card, .connect-card, .btn').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+// ============ BOOT SEQUENCE ============
+const bootLines = document.querySelectorAll('.boot-line');
+let bootDelay = 0;
+
+bootLines.forEach((line, i) => {
+  setTimeout(() => {
+    line.style.transition = 'opacity 0.2s';
+    line.style.opacity = '1';
+  }, bootDelay);
+  bootDelay += 400;
+});
+
+setTimeout(() => {
+  document.getElementById('boot').classList.add('done');
+}, bootDelay + 600);
+
+// ============ NEURAL NETWORK BACKGROUND ============
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+
+let nodes = [];
+let mouse = { x: 0, y: 0 };
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener('resize', resize);
+
+document.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+class Node {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.radius = Math.random() * 1.5 + 0.5;
+    this.color = Math.random() > 0.5 ? '#ff2d8a' : '#00e5ff';
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Mouse attraction
+    const dx = mouse.x - this.x;
+    const dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 200) {
+      this.x += dx * 0.0008;
+      this.y += dy * 0.0008;
+    }
+
+    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function initNodes() {
+  nodes = [];
+  const count = Math.min(80, Math.floor(window.innerWidth / 20));
+  for (let i = 0; i < count; i++) {
+    nodes.push(new Node());
+  }
+}
+
+initNodes();
+window.addEventListener('resize', initNodes);
+
+function drawConnections() {
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 140) {
+        const opacity = (1 - dist / 140) * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = `rgba(255, 45, 138, ${opacity})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawConnections();
+  nodes.forEach(node => {
+    node.update();
+    node.draw();
+  });
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+// ============ REVEAL ON SCROLL ============
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ============ TEXT SCRAMBLE ON HOVER (work cards) ============
+class TextScramble {
+  constructor(el) {
+    this.el = el;
+    this.chars = '!<>-_\\/[]{}—=+*^?#';
+    this.update = this.update.bind(this);
+  }
+
+  setText(newText) {
+    const oldText = this.el.innerText;
+    const length = Math.max(oldText.length, newText.length);
+    const promise = new Promise(resolve => this.resolve = resolve);
+    this.queue = [];
+    for (let i = 0; i < length; i++) {
+      const from = oldText[i] || '';
+      const to = newText[i] || '';
+      const start = Math.floor(Math.random() * 20);
+      const end = start + Math.floor(Math.random() * 20);
+      this.queue.push({ from, to, start, end });
+    }
+    cancelAnimationFrame(this.frameRequest);
+    this.frame = 0;
+    this.update();
+    return promise;
+  }
+
+  update() {
+    let output = '';
+    let complete = 0;
+    for (let i = 0, n = this.queue.length; i < n; i++) {
+      let { from, to, start, end, char } = this.queue[i];
+      if (this.frame >= end) {
+        complete++;
+        output += to;
+      } else if (this.frame >= start) {
+        if (!char || Math.random() < 0.28) {
+          char = this.chars[Math.floor(Math.random() * this.chars.length)];
+          this.queue[i].char = char;
+        }
+        output += `<span style="color: var(--magenta)">${char}</span>`;
+      } else {
+        output += from;
+      }
+    }
+    this.el.innerHTML = output;
+    if (complete === this.queue.length) {
+      this.resolve();
+    } else {
+      this.frameRequest = requestAnimationFrame(this.update);
+      this.frame++;
+    }
+  }
+}
+
+document.querySelectorAll('.work-title, .build-title').forEach(el => {
+  const original = el.innerText;
+  const scrambler = new TextScramble(el);
+  el.parentElement.addEventListener('mouseenter', () => {
+    scrambler.setText(original);
+  });
+});
+
+// ============ ARCADE BRIDGE GAME ============
+const arcadeCanvas = document.getElementById('arcade-canvas');
+const arcadeCtx = arcadeCanvas.getContext('2d');
+const arcadeCode = document.getElementById('arcade-code');
+const playBtn = document.getElementById('arcade-play-btn');
+const winsCountEl = document.getElementById('wins-count');
+const failsCountEl = document.getElementById('fails-count');
+
+function setupArcade() {
+  const rect = arcadeCanvas.getBoundingClientRect();
+  arcadeCanvas.width = rect.width;
+  arcadeCanvas.height = rect.height;
+}
+
+setupArcade();
+window.addEventListener('resize', setupArcade);
+
+const CYAN = '#00e5ff';
+const CYAN_LIGHT = '#7ff5ff';
+const CYAN_DARK = '#0088aa';
+const MAGENTA = '#ff2d8a';
+const WHITE = '#e8eaf2';
+const DARK = '#050814';
+
+let arcadeState = {
+  phase: 'idle',
+  phaseTime: 0,
+  bridgePixels: 0,
+  playerX: 0,
+  playerHop: 0,
+  playerY: 0,
+  playerVy: 0,
+  smiley: false,
+  diamondGlow: 0,
+  diamondRotation: 0,
+  willFail: false,
+  failPoint: 0,
+  bridgeCollapse: 0,
+  totalTime: 0,
+  wins: 0,
+  fails: 0
+};
+
+const winCodeLines = [
+  '> boot bnd.exe',
+  '> loading bridge...',
+  '> player ready',
+  '> destination: ◆',
+  '> go.'
+];
+
+function drawPixel(x, y, size, color) {
+  arcadeCtx.fillStyle = color;
+  arcadeCtx.fillRect(Math.floor(x), Math.floor(y), size, size);
+}
+
+function getBridgePoints() {
+  const w = arcadeCanvas.width;
+  const h = arcadeCanvas.height;
+  const bridgeY = h * 0.65;
+  const startX = w * 0.15;
+  const endX = w * 0.85;
+  const arcHeight = h * 0.18;
+  return { startX, endX, bridgeY, arcHeight };
+}
+
+function getBridgeY(t) {
+  const { bridgeY, arcHeight } = getBridgePoints();
+  return bridgeY - Math.sin(t * Math.PI) * arcHeight;
+}
+
+function drawBridge(progress, collapseAmount) {
+  const { startX, endX, bridgeY, arcHeight } = getBridgePoints();
+  const bridgeWidth = endX - startX;
+  const px = 4;
+
+  const totalPoints = Math.floor(bridgeWidth / px);
+  const visiblePoints = Math.floor(totalPoints * progress);
+
+  for (let i = 0; i < visiblePoints; i++) {
+    const t = i / totalPoints;
+    const x = startX + i * px;
+    const arch = Math.sin(t * Math.PI) * arcHeight;
+    let y = bridgeY - arch;
+
+    // Apply collapse
+    if (collapseAmount > 0) {
+      // Pixels past failPoint fall down
+      if (t > arcadeState.failPoint) {
+        const fallDist = (t - arcadeState.failPoint) * 50;
+        y += collapseAmount * collapseAmount * (200 + fallDist);
+        // Shake/scatter
+        const shake = (Math.random() - 0.5) * collapseAmount * 8;
+        y += shake;
+      }
+    }
+
+    if (y < arcadeCanvas.height) {
+      drawPixel(x, y, px, MAGENTA);
+      drawPixel(x, y - px, px, MAGENTA + '80');
+    }
+  }
+
+  // Pillars
+  if (progress > 0.05) {
+    const leftCollapse = collapseAmount > 0 && arcadeState.failPoint < 0.1 ? collapseAmount * 100 : 0;
+    for (let py = bridgeY; py < arcadeCanvas.height * 0.85; py += px) {
+      drawPixel(startX, py + leftCollapse, px, MAGENTA);
+    }
+    if (progress > 0.1) {
+      const bX = startX - px * 4;
+      const bY = arcadeCanvas.height * 0.78 + leftCollapse;
+      drawPixel(bX, bY, px * 3, MAGENTA);
+      drawPixel(bX, bY + px, px, MAGENTA);
+      drawPixel(bX + px * 2, bY + px, px, MAGENTA);
+      drawPixel(bX, bY + px * 2, px * 3, MAGENTA);
+    }
+  }
+
+  if (progress > 0.5) {
+    const rightCollapse = collapseAmount > 0 && arcadeState.failPoint > 0.5 ? collapseAmount * 100 : 0;
+    for (let py = bridgeY; py < arcadeCanvas.height * 0.85; py += px) {
+      drawPixel(endX, py + rightCollapse, px, MAGENTA);
+    }
+    const dX = endX + px;
+    const dY = arcadeCanvas.height * 0.78 + rightCollapse;
+    drawPixel(dX, dY, px * 3, MAGENTA);
+    drawPixel(dX, dY + px, px, MAGENTA);
+    drawPixel(dX + px * 2, dY + px, px, MAGENTA);
+    drawPixel(dX, dY + px * 2, px * 3, MAGENTA);
+  }
+}
+
+function drawPlayer(x, y, mood) {
+  // mood: 'neutral' | 'happy' | 'happy-white' | 'dead'
+  const px = 4;
+  const color = (mood === 'happy') ? CYAN : WHITE;
+  const isHappy = mood === 'happy' || mood === 'happy-white';
+
+  // Round head
+  drawPixel(x + px, y, px * 4, color);
+  drawPixel(x, y + px, px * 6, color);
+  drawPixel(x, y + px * 2, px * 6, color);
+  drawPixel(x, y + px * 3, px * 6, color);
+  drawPixel(x + px, y + px * 4, px * 4, color);
+
+  if (mood === 'dead') {
+    // X eyes
+    drawPixel(x + px * 1.2, y + px * 1.2, px * 0.7, DARK);
+    drawPixel(x + px * 1.6, y + px * 1.6, px * 0.7, DARK);
+    drawPixel(x + px * 2, y + px * 1.2, px * 0.7, DARK);
+    drawPixel(x + px * 1.2, y + px * 2, px * 0.7, DARK);
+    drawPixel(x + px * 2, y + px * 2, px * 0.7, DARK);
+
+    drawPixel(x + px * 3.2, y + px * 1.2, px * 0.7, DARK);
+    drawPixel(x + px * 3.6, y + px * 1.6, px * 0.7, DARK);
+    drawPixel(x + px * 4, y + px * 1.2, px * 0.7, DARK);
+    drawPixel(x + px * 3.2, y + px * 2, px * 0.7, DARK);
+    drawPixel(x + px * 4, y + px * 2, px * 0.7, DARK);
+
+    // Sad mouth (downturned frown)
+    drawPixel(x + px * 1.5, y + px * 3.3, px * 0.8, DARK);
+    drawPixel(x + px * 2, y + px * 3, px * 2, DARK);
+    drawPixel(x + px * 3.5, y + px * 3.3, px * 0.8, DARK);
+  } else {
+    // Eyes
+    drawPixel(x + px * 1.5, y + px * 1.5, px * 0.8, DARK);
+    drawPixel(x + px * 3.5, y + px * 1.5, px * 0.8, DARK);
+
+    if (isHappy) {
+      drawPixel(x + px * 1.5, y + px * 3, px * 0.8, DARK);
+      drawPixel(x + px * 2, y + px * 3.3, px * 2, DARK);
+      drawPixel(x + px * 3.5, y + px * 3, px * 0.8, DARK);
+    } else {
+      drawPixel(x + px * 2, y + px * 3, px * 2, DARK);
+    }
+  }
+}
+
+function draw3DDiamond(cx, cy, rotation, glow) {
+  // Pixel-art diamond — classic gem cut, light blue with white highlights
+  // Rotation creates a subtle width pulse to simulate 3D facet shimmer
+  const px = 4;
+
+  // Glow halo
+  arcadeCtx.shadowColor = CYAN;
+  arcadeCtx.shadowBlur = 30 * glow;
+
+  // Diamond color palette (light to dark)
+  const C_HIGHLIGHT = '#ffffff';
+  const C_LIGHT = '#a8e8ff';
+  const C_MID = '#5ec9f0';
+  const C_DARK = '#2d8fc4';
+  const C_SHADOW = '#1a5d8a';
+
+  // Subtle rotation effect — the diamond "breathes" on its axis
+  const breath = Math.sin(rotation) * 0.15;
+  const widthScale = 1 + breath;
+
+  // Pixel-art diamond grid (12 wide x 12 tall)
+  // Each entry: 0=empty, 1=highlight, 2=light, 3=mid, 4=dark, 5=shadow
+  const diamond = [
+    [0,0,0,3,3,4,4,3,3,0,0,0],   // top crown edge
+    [0,0,3,1,2,2,2,2,2,3,0,0],   // top facet row 1
+    [0,3,1,1,2,2,2,2,3,3,3,0],   // top facet row 2 — highlight on left
+    [3,1,1,2,2,2,3,3,3,3,4,3],   // crown — main highlight
+    [3,3,3,3,3,3,3,4,4,4,4,4],   // girdle (widest line)
+    [0,4,3,3,3,3,4,4,4,4,5,0],   // pavilion top
+    [0,0,4,3,3,4,4,4,4,5,0,0],   // pavilion middle
+    [0,0,0,4,4,4,4,5,5,0,0,0],   // pavilion lower
+    [0,0,0,0,4,4,5,5,0,0,0,0],   // pavilion narrow
+    [0,0,0,0,0,5,5,0,0,0,0,0],   // tip
+  ];
+
+  const colors = [null, C_HIGHLIGHT, C_LIGHT, C_MID, C_DARK, C_SHADOW];
+
+  const cols = diamond[0].length;
+  const rows = diamond.length;
+  const totalW = cols * px * widthScale;
+  const totalH = rows * px;
+  const startX = cx - totalW / 2;
+  const startY = cy - totalH / 2;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const val = diamond[r][c];
+      if (val > 0) {
+        const x = startX + c * px * widthScale;
+        const y = startY + r * px;
+        arcadeCtx.fillStyle = colors[val];
+        arcadeCtx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(px * widthScale), px);
+      }
+    }
+  }
+
+  // Animated sparkle moves around top facets based on rotation
+  const sparkleAngle = rotation * 1.5;
+  const sparkleX = cx + Math.cos(sparkleAngle) * (cols * px * 0.25);
+  const sparkleY = cy - rows * px * 0.3 + Math.sin(sparkleAngle) * 4;
+  arcadeCtx.fillStyle = C_HIGHLIGHT;
+  arcadeCtx.fillRect(Math.floor(sparkleX), Math.floor(sparkleY), 3, 3);
+
+  arcadeCtx.shadowBlur = 0;
+}
+
+function blendColor(c1, c2, t) {
+  // Simple blend between two hex colors
+  const r1 = parseInt(c1.slice(1, 3), 16);
+  const g1 = parseInt(c1.slice(3, 5), 16);
+  const b1 = parseInt(c1.slice(5, 7), 16);
+  const r2 = parseInt(c2.slice(1, 3), 16);
+  const g2 = parseInt(c2.slice(3, 5), 16);
+  const b2 = parseInt(c2.slice(5, 7), 16);
+  const r = Math.floor(r1 + (r2 - r1) * t);
+  const g = Math.floor(g1 + (g2 - g1) * t);
+  const b = Math.floor(b1 + (b2 - b1) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+function drawArcade() {
+  arcadeCtx.fillStyle = DARK;
+  arcadeCtx.fillRect(0, 0, arcadeCanvas.width, arcadeCanvas.height);
+
+  // Background grid
+  arcadeCtx.strokeStyle = 'rgba(255, 45, 138, 0.15)';
+  arcadeCtx.lineWidth = 1;
+  const horizonY = arcadeCanvas.height * 0.5;
+  const cx = arcadeCanvas.width / 2;
+
+  for (let i = 0; i < 8; i++) {
+    const y = horizonY + Math.pow(i / 7, 2) * (arcadeCanvas.height - horizonY);
+    arcadeCtx.beginPath();
+    arcadeCtx.moveTo(0, y);
+    arcadeCtx.lineTo(arcadeCanvas.width, y);
+    arcadeCtx.stroke();
+  }
+
+  for (let i = -10; i <= 10; i++) {
+    const x = cx + i * (arcadeCanvas.width / 8);
+    arcadeCtx.beginPath();
+    arcadeCtx.moveTo(cx, horizonY);
+    arcadeCtx.lineTo(x, arcadeCanvas.height);
+    arcadeCtx.stroke();
+  }
+
+  // Sun
+  arcadeCtx.fillStyle = 'rgba(255, 45, 138, 0.6)';
+  arcadeCtx.beginPath();
+  arcadeCtx.arc(cx, horizonY, 40, 0, Math.PI * 2);
+  arcadeCtx.fill();
+
+  // Idle screen content
+  if (arcadeState.phase === 'idle') {
+    arcadeCtx.fillStyle = MAGENTA;
+    arcadeCtx.font = '32px VT323, monospace';
+    arcadeCtx.textAlign = 'center';
+    arcadeCtx.shadowColor = MAGENTA;
+    arcadeCtx.shadowBlur = 8;
+    arcadeCtx.fillText('< bnd >', cx, arcadeCanvas.height * 0.3);
+    arcadeCtx.shadowBlur = 0;
+
+    arcadeCtx.fillStyle = CYAN;
+    arcadeCtx.font = '14px VT323, monospace';
+    arcadeCtx.fillText('cross the bridge', cx, arcadeCanvas.height * 0.4);
+    return;
+  }
+
+  // Diamond at the destination (during play)
+  if (arcadeState.phase === 'bridge' || arcadeState.phase === 'player' || arcadeState.phase === 'fall') {
+    const diamondX = arcadeCanvas.width * 0.85;
+    const diamondY = arcadeCanvas.height * 0.45;
+    const pulse = 0.4 + Math.sin(arcadeState.totalTime * 0.05) * 0.2;
+    draw3DDiamond(diamondX, diamondY, arcadeState.diamondRotation, pulse);
+  }
+
+  // Bridge
+  if (arcadeState.phase === 'bridge' || arcadeState.phase === 'player' || arcadeState.phase === 'fall' || arcadeState.phase === 'win') {
+    drawBridge(arcadeState.bridgePixels, arcadeState.bridgeCollapse);
+  }
+
+  // Player
+  if (arcadeState.phase === 'player' || arcadeState.phase === 'fall') {
+    const { startX, endX, bridgeY, arcHeight } = getBridgePoints();
+    const t = arcadeState.playerX;
+    const x = startX + (endX - startX) * t - 12;
+
+    let y;
+    if (arcadeState.phase === 'fall') {
+      // Falling
+      const arch = Math.sin(arcadeState.failPoint * Math.PI) * arcHeight;
+      const baseY = bridgeY - arch - 24;
+      y = baseY + arcadeState.playerY;
+    } else {
+      const arch = Math.sin(t * Math.PI) * arcHeight;
+      const hop = Math.abs(Math.sin(arcadeState.playerHop)) * 4;
+      y = bridgeY - arch - 24 - hop;
+    }
+
+    const mood = arcadeState.phase === 'fall' ? 'dead' : 'neutral';
+    drawPlayer(x, y, mood);
+  }
+
+  // Win screen — big rotating diamond center stage
+  if (arcadeState.phase === 'win') {
+    const diamondX = arcadeCanvas.width / 2;
+    const diamondY = arcadeCanvas.height * 0.42;
+    draw3DDiamond(diamondX, diamondY, arcadeState.diamondRotation, 1);
+
+    // Happy player below diamond (stays white)
+    drawPlayer(diamondX - 12, arcadeCanvas.height * 0.72, 'happy-white');
+
+    // WINNER! big text
+    arcadeCtx.fillStyle = CYAN;
+    arcadeCtx.font = '32px VT323, monospace';
+    arcadeCtx.textAlign = 'center';
+    arcadeCtx.shadowColor = CYAN;
+    arcadeCtx.shadowBlur = 12;
+    arcadeCtx.fillText('WINNER!', diamondX, arcadeCanvas.height * 0.18);
+
+    // CONNECTED subtitle
+    arcadeCtx.font = '16px VT323, monospace';
+    arcadeCtx.shadowBlur = 6;
+    arcadeCtx.fillText('connected', diamondX, arcadeCanvas.height * 0.92);
+    arcadeCtx.shadowBlur = 0;
+  }
+
+  // Fail screen — show dead player with collapsed bridge
+  if (arcadeState.phase === 'fail-text') {
+    // Show the broken bridge in the background
+    drawBridge(arcadeState.bridgePixels, 1);
+
+    // Dead player centered
+    const playerX = arcadeCanvas.width / 2 - 12;
+    const playerY = arcadeCanvas.height * 0.5;
+    drawPlayer(playerX, playerY, 'dead');
+
+    // YOU LOSE big text
+    arcadeCtx.fillStyle = MAGENTA;
+    arcadeCtx.font = '32px VT323, monospace';
+    arcadeCtx.textAlign = 'center';
+    arcadeCtx.shadowColor = MAGENTA;
+    arcadeCtx.shadowBlur = 12;
+    arcadeCtx.fillText('YOU LOSE', arcadeCanvas.width / 2, arcadeCanvas.height * 0.18);
+
+    // bridge failed subtitle
+    arcadeCtx.font = '16px VT323, monospace';
+    arcadeCtx.shadowBlur = 6;
+    arcadeCtx.fillText('bridge failed', arcadeCanvas.width / 2, arcadeCanvas.height * 0.3);
+
+    // try again at bottom
+    arcadeCtx.fillStyle = CYAN;
+    arcadeCtx.shadowColor = CYAN;
+    arcadeCtx.font = '14px VT323, monospace';
+    arcadeCtx.fillText('try again', arcadeCanvas.width / 2, arcadeCanvas.height * 0.92);
+    arcadeCtx.shadowBlur = 0;
+  }
+}
+
+function updateArcadeCode() {
+  const phase = arcadeState.phase;
+  const t = arcadeState.phaseTime;
+
+  if (phase === 'idle') {
+    arcadeCode.textContent = '> awaiting input...';
+  } else if (phase === 'code') {
+    const lineIdx = Math.floor(t / 18);
+    const lines = winCodeLines.slice(0, Math.min(lineIdx + 1, winCodeLines.length));
+    if (lineIdx < winCodeLines.length) {
+      const currentChars = (t % 18);
+      const last = lines[lines.length - 1];
+      lines[lines.length - 1] = last.slice(0, Math.min(currentChars, last.length));
+    }
+    arcadeCode.textContent = lines.join('\n');
+  } else if (phase === 'bridge') {
+    arcadeCode.textContent = '> bridge online\n> awaiting player...';
+  } else if (phase === 'player') {
+    arcadeCode.textContent = '> crossing...';
+  } else if (phase === 'fall') {
+    arcadeCode.textContent = '> ERROR\n> bridge integrity lost\n> player down';
+  } else if (phase === 'win') {
+    arcadeCode.textContent = '> contact made\n> < bnd > complete';
+  } else if (phase === 'fail-text') {
+    arcadeCode.textContent = '> connection failed\n> press start to retry';
+  }
+}
+
+function startGame() {
+  // Roll the dice
+  arcadeState.willFail = Math.random() < 0.3;
+  arcadeState.failPoint = arcadeState.willFail ? 0.3 + Math.random() * 0.4 : 1.1;
+  arcadeState.phase = 'code';
+  arcadeState.phaseTime = 0;
+  arcadeState.bridgePixels = 0;
+  arcadeState.playerX = 0;
+  arcadeState.playerY = 0;
+  arcadeState.playerVy = 0;
+  arcadeState.playerHop = 0;
+  arcadeState.bridgeCollapse = 0;
+  arcadeState.diamondGlow = 0;
+  playBtn.classList.add('hidden');
+}
+
+playBtn.addEventListener('click', startGame);
+
+function arcadeLoop() {
+  arcadeState.phaseTime++;
+  arcadeState.totalTime++;
+  arcadeState.diamondRotation += 0.03;
+
+  if (arcadeState.phase === 'code') {
+    if (arcadeState.phaseTime > 100) {
+      arcadeState.phase = 'bridge';
+      arcadeState.phaseTime = 0;
+    }
+  } else if (arcadeState.phase === 'bridge') {
+    arcadeState.bridgePixels = Math.min(1, arcadeState.phaseTime / 70);
+    if (arcadeState.bridgePixels >= 1 && arcadeState.phaseTime > 80) {
+      arcadeState.phase = 'player';
+      arcadeState.phaseTime = 0;
+      arcadeState.playerX = 0;
+    }
+  } else if (arcadeState.phase === 'player') {
+    arcadeState.playerX = Math.min(1, arcadeState.phaseTime / 100);
+    arcadeState.playerHop += 0.4;
+
+    // Check failure point
+    if (arcadeState.willFail && arcadeState.playerX >= arcadeState.failPoint) {
+      arcadeState.phase = 'fall';
+      arcadeState.phaseTime = 0;
+      arcadeState.playerVy = -2; // little upward bump first
+    } else if (arcadeState.playerX >= 1) {
+      arcadeState.phase = 'win';
+      arcadeState.phaseTime = 0;
+      arcadeState.smiley = true;
+      arcadeState.wins++;
+      winsCountEl.textContent = arcadeState.wins;
+    }
+  } else if (arcadeState.phase === 'fall') {
+    // Apply gravity
+    arcadeState.playerVy += 0.6;
+    arcadeState.playerY += arcadeState.playerVy;
+    // Bridge collapses
+    arcadeState.bridgeCollapse = Math.min(1, arcadeState.phaseTime / 50);
+
+    if (arcadeState.phaseTime > 90) {
+      arcadeState.phase = 'fail-text';
+      arcadeState.phaseTime = 0;
+      arcadeState.fails++;
+      failsCountEl.textContent = arcadeState.fails;
+    }
+  } else if (arcadeState.phase === 'win') {
+    if (arcadeState.phaseTime > 200) {
+      arcadeState.phase = 'idle';
+      arcadeState.phaseTime = 0;
+      arcadeState.bridgePixels = 0;
+      playBtn.textContent = '▶ PLAY AGAIN';
+      playBtn.classList.remove('hidden');
+    }
+  } else if (arcadeState.phase === 'fail-text') {
+    if (arcadeState.phaseTime > 200) {
+      arcadeState.phase = 'idle';
+      arcadeState.phaseTime = 0;
+      arcadeState.bridgePixels = 0;
+      arcadeState.bridgeCollapse = 0;
+      playBtn.textContent = '▶ TRY AGAIN';
+      playBtn.classList.remove('hidden');
+    }
+  }
+
+  updateArcadeCode();
+  drawArcade();
+  requestAnimationFrame(arcadeLoop);
+}
+
+arcadeLoop();
+
+</script>
+
+</body>
+</html>
