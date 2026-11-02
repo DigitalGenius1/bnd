@@ -193,7 +193,7 @@
   calcInputs.forEach(id => $(`#${id}`)?.addEventListener('input', updateCalculator));
   updateCalculator();
 
-  const shareUrl = 'https://bnd.one/icewire/';
+  const shareUrl = 'https://is.gd/IcewireLive';
   const shareIntro = 'Meet Icewire — the nervous system for liquid infrastructure.\n\nAn interactive vision for turning data-centre cooling into one living, explainable system. Explore the product, market, economics and full vision film:';
   const whatsapp = $('[data-share="whatsapp"]');
   const email = $('[data-share="email"]');
